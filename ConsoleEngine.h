@@ -33,13 +33,14 @@ Last Updated: 30/08/2017
 //#error Please enable UNICODE for the compiler.VS: Project Properties -> General -> \Character Set -> Use Unicode
 //#endif
 
-#include <windows.h>
 #include <iostream>
 #include <vector>
 #include <list>
 #include <thread>
 #include <atomic>
 #include <condition_variable>
+
+#include <windows.h>
 
 // Colors in Hex
 enum COLOUR {
@@ -82,6 +83,109 @@ enum PIXEL_TYPE {
 	PIXEL_ThreeQuarters = 0x2593,
 	PIXEL_HALF = 0x2592,
 	PIXEL_QUARTER = 0x2591
+};
+
+// Sprite Generation
+class TemplateSprite {
+public:
+	TemplateSprite() {
+	
+	}
+
+	TemplateSprite(int w, int h) {
+		Create(w, h);
+	}
+
+	TemplateSprite(wstring sFile) {
+		if (!Load(sFile))
+			Create(8, 8);
+	}
+
+	int nWidth = 0;
+	int nHeight = 0;
+
+private:
+	wchar_t* m_Glyphs = nullptr;
+	short* m_Colours = nullptr;
+
+	void Create(int w, int h) {
+		nWidth = w;
+		nHeight = h;
+		m_Glyphs = new wchar_t[w * h];
+		m_Colours = new short[w * h];
+		for (int i = 0; i < w * h; i++) {
+			m_Glyphs[i] = L' ';
+			m_Colours[i] = FG_BLACK;
+		}
+	}
+
+public:
+	void SetGlyph(int x, int y, wchar_t c) {
+		if (x < 0 || x > nWidth || y < 0 || y > nHeight)
+			return;
+		else
+			m_Glyphs[y * nWidth + x] = c;
+	}
+
+	void SetColour(int x, int y, short c) {
+		if (x < 0 || x > nWidth || y < 0 || y > nHeight)
+			return;
+		else
+			m_Colours[y * nWidth + x] = c;
+	}
+
+	wchar_t GetGlyphs(int x, int y) {
+		if (x < 0 || x > nWidth || y < 0 || y > nHeight)
+			return L' ';
+		else
+			return m_Glyphs[y * nWidth + x];
+	}
+
+	wchar_t GetColour(int x, int y) {
+		if (x < 0 || x > nWidth || y < 0 || y > nHeight)
+			return FG_BLACK;
+		else
+			return m_Colours[y * nWidth + x];
+	}
+
+	bool Save(wstring sFile) {
+		FILE* f = nullptr;
+		_wfopen_s(&f, sFile.c_str(), L"wb");
+		if (f == nullptr)
+			return false;
+
+		fwrite(&nWidth, sizeof(int), 1, f);
+		fwrite(&nHeight, sizeof(int), 1, f);
+		fwrite(m_Colours, sizeof(short), nWidth * nHeight, f);
+		fwrite(m_Glyphs, sizeof(wchar_t), nWidth * nHeight, f);
+
+		fclose(f);
+
+		return true;
+	}
+
+	bool Load(wstring sFile) {
+		delete[] m_Glyphs;
+		delete[] m_Colours;
+		nWidth = 0;
+		nHeight = 0;
+
+		FILE* f = nullptr;
+		_wfopen_s(&f, sFile.c_str(), L"rb");
+		if (f == nullptr)
+			return false;
+		
+		fread(&nWidth, sizeof(int), 1, f);
+		fread(&nHeight, sizeof(int), 1, f);
+
+		Create(nWidth, nHeight);
+
+		fread(m_Colours, sizeof(short), nWidth * nHeight, f);
+		fread(m_Glyphs, sizeof(wchar_t), nWidth * nHeight, f);
+
+		fclose(f);
+		return true;
+	}
 };
 
 // Game Engine 
