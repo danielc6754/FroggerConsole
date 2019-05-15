@@ -296,6 +296,31 @@ public:
 			y = m_nScreenHeight;
 	}
 
+	void DrawSprite(int x, int y, TemplateSprite *sprite) {
+		if (sprite == nullptr)
+			return;
+
+		for (int i = 0; i < sprite->nWidth; i++)
+			for (int j = 0; j < sprite->nHeight; j++)
+				if (sprite->GetGlyphs(i, j) != L' ')
+					Draw(x + i, y + j, sprite->GetGlyphs(i, j), sprite->GetColour(i, j));
+	}
+
+	void DrawPartialSprite(int x, int y, TemplateSprite *sprite, int ox, int oy, int w, int h) {
+		if (sprite == nullptr)
+			return;
+		
+		for (int i = 0; i < w; i++)
+			for (int j = 0; j < h; j++)
+				if (sprite->GetGlyphs(i + ox, j + oy) != L' ')
+					Draw(x + i, y + j, sprite->GetGlyphs(i + ox, j + oy), sprite->GetColour(i + ox, j + oy));
+	}
+
+	~ConsoleTemplateEngine() {
+		SetConsoleActiveScreenBuffer(m_hOriginalConsole);
+		delete[] m_bufScreen;
+	}
+
 public:
 	void Start() {
 		m_bAtomActive = true;

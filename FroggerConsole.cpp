@@ -27,8 +27,11 @@ private:
 	// 1 game unit is 8 character size
 	int nCellSize = 8;
 
+	TemplateSprite* spriteCar2 = nullptr;
+
 protected:
 	virtual bool OnUserCreate() {
+		spriteCar2 = new TemplateSprite(L"Assets/car2.spr");
 
 		return true;
 	}
